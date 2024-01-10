@@ -8,6 +8,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"math/rand"
+	"strconv"
 
 	"go.uber.org/zap"
 	"log"
@@ -48,12 +50,40 @@ func main() {
 
 	app.Get("/health", makeHealthHandler(cache.Ping(redisCMD)))
 
+	go ChanBasic()
 	logger.Info(fmt.Sprintf("Listening on port: %s", cfg.Server.Port))
 	func() {
 		if err = app.Listen(fmt.Sprintf(":%v", cfg.Server.Port)); err != nil {
 			logger.Fatal(err.Error())
 		}
 	}()
+
+}
+
+func ChanBasic() {
+	msg1 := make(chan string)
+	msg2 := make(chan string)
+	go func() {
+		for {
+			select {
+			case m := <-msg1:
+				fmt.Println("from msg1 : ", m)
+			case m := <-msg2:
+				fmt.Println("from msg2 : ", m)
+			}
+		}
+	}()
+
+	for {
+		num := rand.Int()
+		if num%2 == 0 {
+			msg1 <- "hello1 " + strconv.Itoa(num)
+		} else {
+			msg2 <- "hello2 " + strconv.Itoa(num)
+		}
+
+		time.Sleep(1 * time.Second)
+	}
 
 }
 
