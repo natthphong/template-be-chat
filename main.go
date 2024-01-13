@@ -50,7 +50,7 @@ func main() {
 
 	app.Get("/health", makeHealthHandler(cache.Ping(redisCMD)))
 
-	logger.Info(fmt.Sprintf("Listening on port: %s", cfg.Server.Port))
+	fmt.Println(fmt.Sprintf("Listening on port: %s", cfg.Server.Port))
 	func() {
 		if err = app.Listen(fmt.Sprintf(":%v", cfg.Server.Port)); err != nil {
 			logger.Fatal(err.Error())
