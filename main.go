@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"coop-4/test/backend/chat"
 	"coop-4/test/backend/config"
 	"coop-4/test/backend/internal/cache"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/websocket/v2"
 	_ "github.com/gofiber/websocket/v2"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -51,10 +49,6 @@ func main() {
 	redisCMD := redisClient.CMD()
 
 	app.Get("/health", makeHealthHandler(cache.Ping(redisCMD)))
-
-	app.Get("/chat", websocket.New(dashboard.Chat(redisClient.UniversalClient(),
-		cache.PublishRedis(redisClient),
-	)))
 
 	logger.Info(fmt.Sprintf("Listening on port: %s", cfg.Server.Port))
 	func() {
