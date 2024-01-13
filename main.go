@@ -2,18 +2,20 @@ package main
 
 import (
 	"context"
+	"coop-4/test/backend/chat"
 	"coop-4/test/backend/config"
 	"coop-4/test/backend/internal/cache"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/websocket/v2"
+	_ "github.com/gofiber/websocket/v2"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"math/rand"
-	"strconv"
-
 	"go.uber.org/zap"
 	"log"
+	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -50,7 +52,10 @@ func main() {
 
 	app.Get("/health", makeHealthHandler(cache.Ping(redisCMD)))
 
-	go ChanBasic()
+	app.Get("/chat", websocket.New(dashboard.Chat(redisClient.UniversalClient(),
+		cache.PublishRedis(redisClient),
+	)))
+
 	logger.Info(fmt.Sprintf("Listening on port: %s", cfg.Server.Port))
 	func() {
 		if err = app.Listen(fmt.Sprintf(":%v", cfg.Server.Port)); err != nil {
@@ -61,12 +66,14 @@ func main() {
 }
 
 func ChanBasic() {
+
 	msg1 := make(chan string)
 	msg2 := make(chan string)
 	go func() {
 		for {
 			select {
 			case m := <-msg1:
+				//TODO
 				fmt.Println("from msg1 : ", m)
 			case m := <-msg2:
 				fmt.Println("from msg2 : ", m)

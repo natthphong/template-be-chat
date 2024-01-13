@@ -133,3 +133,27 @@ func InCrRedis(cmd redis.Cmdable) InCrRedisFunc {
 		return cmd.Incr(ctx, key).Result()
 	}
 }
+
+type SubscribeChannelFunc func(ctx context.Context, chanel string, redisMsgCh chan string)
+
+func SubscribeChannel(pubsub *redis.PubSub) SubscribeChannelFunc {
+	return func(ctx context.Context, chanel string, redisMsgCh chan string) {
+		channel := pubsub.Channel()
+		go func() {
+			for msg := range channel {
+				redisMsgCh <- msg.Payload
+			}
+		}()
+	}
+}
+
+type PublishRedisFunc func(ctx context.Context, channel string, message interface{}) error
+
+func PublishRedis(client *redisClient) PublishRedisFunc {
+	return func(ctx context.Context, channel string, message interface{}) error {
+		if mode == "cluster" {
+			return client.ClusterClient.Publish(ctx, channel, message).Err()
+		}
+		return client.Client.Publish(ctx, channel, message).Err()
+	}
+}
